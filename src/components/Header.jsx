@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Sahetak from '../assets/Sahetak.png';
-import Plats from '../assets/Plats.jpeg';
+import Sahetak from '../assets/sahetak.png';
+import Plats from '../assets/plats.jpeg';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
