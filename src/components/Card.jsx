@@ -1,277 +1,915 @@
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import dataProduct from '../data/data';
 
 const Card = () => {
-  // State dyal les produits selected (Array d les IDs)
+  // =========================
+  // STATES
+  // =========================
+
+  // Produits sélectionnés
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // State dyal Quantité dyal kol produit { [id]: quantité }
+  // Quantité de chaque produit
   const [quantities, setQuantities] = useState(
-    dataProduct.reduce((acc, p) => ({ ...acc, [p.id]: 1 }), {})
+    dataProduct.reduce(
+      (acc, p) => ({
+        ...acc,
+        [p.id]: 1,
+      }),
+      {}
+    )
   );
 
-  // State dyal Accordion (Modifier open/close) { [id]: boolean }
+  // Accordion Modifier
   const [openAccordions, setOpenAccordions] = useState({});
 
-  // State dyal Notes dyal kol produit { [id]: text }
+  // Notes
   const [notes, setNotes] = useState({});
 
-  // 1. Toggle Selection d Product
+  // Image sélectionnée pour le modal
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  // =========================
+  // 1. SELECT / DESELECT PRODUCT
+  // =========================
+
   const handleSelectProduct = (id) => {
     if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter((item) => item !== id));
-      setOpenAccordions((prev) => ({ ...prev, [id]: false }));
+      setSelectedIds(
+        selectedIds.filter((item) => item !== id)
+      );
+
+      setOpenAccordions((prev) => ({
+        ...prev,
+        [id]: false,
+      }));
     } else {
-      setSelectedIds([...selectedIds, id]);
-      // Accordion kay-bqa msddoud mni kat-selectionner (y-cliki 3la Modifier bash y-ftho)
-      setOpenAccordions((prev) => ({ ...prev, [id]: false }));
+      setSelectedIds([
+        ...selectedIds,
+        id,
+      ]);
+
+      setOpenAccordions((prev) => ({
+        ...prev,
+        [id]: false,
+      }));
     }
   };
 
-  // 2. Select All / Deselect All
+  // =========================
+  // 2. SELECT ALL / DESELECT ALL
+  // =========================
+
   const handleSelectAll = () => {
-    if (selectedIds.length === dataProduct.length) {
+    if (
+      selectedIds.length === dataProduct.length
+    ) {
       setSelectedIds([]);
       setOpenAccordions({});
     } else {
-      const allIds = dataProduct.map((p) => p.id);
+      const allIds = dataProduct.map(
+        (p) => p.id
+      );
+
       setSelectedIds(allIds);
       setOpenAccordions({});
     }
   };
 
-  // 3. Modifier Quantité (+ / -)
+  // =========================
+  // 3. QUANTITÉ
+  // =========================
+
   const handleQuantityChange = (id, delta) => {
     setQuantities((prev) => {
-      const currentQty = prev[id] || 1;
-      const newQty = Math.max(1, currentQty + delta);
-      return { ...prev, [id]: newQty };
+      const currentQty =
+        prev[id] || 1;
+
+      const newQty = Math.max(
+        1,
+        currentQty + delta
+      );
+
+      return {
+        ...prev,
+        [id]: newQty,
+      };
     });
   };
 
-  // 4. Toggle Accordion
+  // =========================
+  // 4. TOGGLE MODIFIER / MASQUER
+  // =========================
+
   const toggleAccordion = (id) => {
-    if (!selectedIds.includes(id)) return;
-    setOpenAccordions((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  // 5. Update Note
-  const handleNoteChange = (id, value) => {
-    setNotes((prev) => ({ ...prev, [id]: value }));
-  };
-
-  // 6. Calcul Total & Remise
-  const subtotal = dataProduct.reduce((sum, product) => {
-    if (selectedIds.includes(product.id)) {
-      const qty = quantities[product.id] || 1;
-      return sum + product.price * qty;
-    }
-    return sum;
-  }, 0);
-
-  const isAllSelected = selectedIds.length === dataProduct.length && dataProduct.length > 0;
-  const discount = isAllSelected ? 10 : 0;
-  const total = Math.max(0, subtotal - discount);
-
-  // 7. Envoi WhatsApp
-  const handleWhatsAppOrder = () => {
-    if (selectedIds.length === 0) {
-      alert("Afack khtar 3la l-aqal plat wahad!");
+    if (!selectedIds.includes(id)) {
       return;
     }
 
-    let message = `*Salam, bghit n-commander had les plats:*\n\n`;
+    setOpenAccordions((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  // =========================
+  // 5. NOTES
+  // =========================
+
+  const handleNoteChange = (id, value) => {
+    setNotes((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  // =========================
+  // 6. TOTAL
+  // =========================
+
+  const subtotal =
+    dataProduct.reduce(
+      (sum, product) => {
+        if (
+          selectedIds.includes(
+            product.id
+          )
+        ) {
+          const qty =
+            quantities[product.id] || 1;
+
+          return (
+            sum +
+            product.price * qty
+          );
+        }
+
+        return sum;
+      },
+      0
+    );
+
+  // Remise si tous les produits sont sélectionnés
+  const isAllSelected =
+    selectedIds.length ===
+      dataProduct.length &&
+    dataProduct.length > 0;
+
+  const discount =
+    isAllSelected ? 10 : 0;
+
+  const total = Math.max(
+    0,
+    subtotal - discount
+  );
+
+  // =========================
+  // 7. WHATSAPP
+  // =========================
+
+  const handleWhatsAppOrder = () => {
+    if (selectedIds.length === 0) {
+      alert(
+        "Afack khtar 3la l-aqal plat wahad!"
+      );
+      return;
+    }
+
+    let message =
+      `*Salam, bghit n-commander had les plats:*\n\n`;
 
     dataProduct.forEach((p) => {
-      if (selectedIds.includes(p.id)) {
-        const qty = quantities[p.id] || 1;
-        const noteText = notes[p.id] ? `\n   📝 *Note:* ${notes[p.id]}` : '';
-        message += `🍽️ *${p.name}* (${p.jour})\n   - Quantité: ${qty}\n   - Prix: ${p.price * qty} DH${noteText}\n\n`;
+      if (
+        selectedIds.includes(p.id)
+      ) {
+        const qty =
+          quantities[p.id] || 1;
+
+        const noteText = notes[p.id]
+          ? `\n   📝 *Note:* ${notes[p.id]}`
+          : '';
+
+        message +=
+          `🍽️ *${p.name}* (${p.jour})\n` +
+          `   - Quantité: ${qty}\n` +
+          `   - Prix: ${p.price * qty} DH` +
+          `${noteText}\n\n`;
       }
     });
 
     if (discount > 0) {
-      message += `🎁 *Remise Semaine (Tous les jours):* -10 DH\n`;
+      message +=
+        `🎁 *Remise Semaine (Tous les jours):* -10 DH\n`;
     }
 
-    message += `💰 *Total Final: ${total} DH*`;
+    message +=
+      `💰 *Total Final: ${total} DH*`;
 
-    // Clean phone number (Format: 212656536985)
-    const rawPhoneNumber = "+212 656-536985"; 
-    const phoneNumber = rawPhoneNumber.replace(/[^0-9]/g, ''); 
-    
-    const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+    // Numéro WhatsApp
+    const rawPhoneNumber =
+      "+212 656-536985";
+
+    const phoneNumber =
+      rawPhoneNumber.replace(
+        /[^0-9]/g,
+        ''
+      );
+
+    const url =
+      `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+        message
+      )}`;
+
+    window.open(
+      url,
+      '_blank'
+    );
   };
 
+  // =========================
+  // 8. ESCAPE POUR FERMER IMAGE
+  // =========================
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedImage(null);
+      }
+    };
+
+    window.addEventListener(
+      'keydown',
+      handleKeyDown
+    );
+
+    return () => {
+      window.removeEventListener(
+        'keydown',
+        handleKeyDown
+      );
+    };
+  }, []);
+
+  // =========================
+  // RETURN
+  // =========================
+
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6 bg-white">
-      {/* Header & Checkbox Tout Sélectionner */}
-      <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="text-xl font-bold text-[#204115]">Menu de la Semaine</h2>
-        <label className="flex items-center space-x-2 cursor-pointer font-semibold text-gray-700">
-          <input
-            type="checkbox"
-            checked={isAllSelected}
-            onChange={handleSelectAll}
-            style={{ accentColor: '#E58730' }}
-            className="w-5 h-5 rounded cursor-pointer"
-          />
-          <span>Sélectionner tout</span>
-        </label>
-      </div>
+    <>
+      <div
+        className="
+          max-w-4xl
+          mx-auto
+          p-4
+          sm:p-6
+          space-y-6
+          bg-white
+        "
+      >
 
-      {/* Grid dyal Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-        {dataProduct.map((product) => {
-          const isSelected = selectedIds.includes(product.id);
-          const isOpen = !!openAccordions[product.id];
-          const qty = quantities[product.id] || 1;
+        {/* ========================= */}
+        {/* TITRE MENU */}
+        {/* ========================= */}
 
-          return (
-            <div
-              key={product.id}
+        <div className="flex justify-center">
+          <h2
+            className="
+              rounded-xl
+              border-2
+              border-[#649714]
+              bg-white
+              px-6
+              py-3
+              text-center
+              text-2xl
+              font-bold
+              text-[#204115]
+              shadow-md
+              sm:px-8
+              sm:py-4
+              sm:text-3xl
+            "
+          >
+            Menu de la Semaine
+          </h2>
+        </div>
+
+        {/* ========================= */}
+        {/* SELECT ALL */}
+        {/* ========================= */}
+
+        <div
+          className="
+            flex
+            items-center
+            justify-end
+            rounded-xl
+            border
+            border-gray-100
+            bg-white
+            p-4
+            shadow-sm
+          "
+        >
+          <label
+            className="
+              flex
+              cursor-pointer
+              items-center
+              space-x-2
+              font-semibold
+              text-gray-700
+            "
+          >
+            <input
+              type="checkbox"
+              checked={isAllSelected}
+              onChange={handleSelectAll}
               style={{
-                borderColor: isSelected ? '#E58730' : '#e5e7eb',
+                accentColor: '#E58730',
               }}
-              className={`bg-white rounded-xl shadow-sm border transition-all duration-200 overflow-hidden ${
-                isSelected ? 'ring-2 ring-[#E58730]/20' : ''
-              }`}
-            >
-              {/* Card Body */}
-              <div className="p-4 flex gap-4 items-center">
-                {/* Checkbox Button */}
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => handleSelectProduct(product.id)}
-                  style={{ accentColor: '#E58730' }}
-                  className="w-5 h-5 rounded cursor-pointer flex-shrink-0"
-                />
+              className="
+                h-5
+                w-5
+                cursor-pointer
+                rounded
+              "
+            />
 
-                {/* Image */}
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                />
+            <span>
+              Sélectionner tout
+            </span>
+          </label>
+        </div>
 
-                {/* Details */}
-                <div className="flex-1 min-w-0">
-                  <span 
-                    style={{ backgroundColor: '#E58730', color: '#ffffff' }}
-                    className="text-xs font-semibold px-2 py-0.5 rounded-full"
+        {/* ========================= */}
+        {/* PRODUCTS */}
+        {/* ========================= */}
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            items-start
+            gap-4
+            md:grid-cols-2
+          "
+        >
+          {dataProduct.map(
+            (product) => {
+
+              const isSelected =
+                selectedIds.includes(
+                  product.id
+                );
+
+              const isOpen =
+                !!openAccordions[
+                  product.id
+                ];
+
+              const qty =
+                quantities[
+                  product.id
+                ] || 1;
+
+              return (
+                <div
+                  key={product.id}
+                  style={{
+                    borderColor:
+                      isSelected
+                        ? '#E58730'
+                        : '#e5e7eb',
+                  }}
+                  className={`
+                    overflow-hidden
+                    rounded-xl
+                    border
+                    bg-white
+                    shadow-sm
+                    transition-all
+                    duration-200
+                    ${
+                      isSelected
+                        ? 'ring-2 ring-[#E58730]/20'
+                        : ''
+                    }
+                  `}
+                >
+
+                  {/* ========================= */}
+                  {/* CARD BODY */}
+                  {/* ========================= */}
+
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-4
+                      p-4
+                    "
                   >
-                    {product.jour}
-                  </span>
-                  <h3 className="font-bold text-gray-800 text-base truncate mt-1">
-                    {product.name}
-                  </h3>
-                  <p 
-                    style={{ color: '#204115' }}
-                    className="font-extrabold text-sm mt-0.5"
-                  >
-                    {product.price} DH
-                  </p>
-                </div>
-              </div>
 
-              {/* Accordion Trigger (Ila kan selected) */}
-              {isSelected && (
-                <div className="border-t border-gray-100 bg-gray-50/50">
-                  <button
-                    onClick={() => toggleAccordion(product.id)}
-                    style={{ color: '#E58730' }}
-                    className="w-full px-4 py-2.5 text-left text-xs font-bold hover:bg-gray-100 flex justify-between items-center transition-colors"
-                  >
-                    <span>Modifier (Quantité & Notes)</span>
-                    <span className="text-sm">{isOpen ? '▲' : '▼'}</span>
-                  </button>
+                    {/* Checkbox */}
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() =>
+                        handleSelectProduct(
+                          product.id
+                        )
+                      }
+                      style={{
+                        accentColor:
+                          '#E58730',
+                      }}
+                      className="
+                        h-5
+                        w-5
+                        flex-shrink-0
+                        cursor-pointer
+                        rounded
+                      "
+                    />
 
-                  {/* Accordion Content */}
-                  {isOpen && (
-                    <div className="p-4 pt-2 border-t border-gray-100 space-y-3 bg-white">
-                      {/* Control Quantité */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">Quantité:</span>
-                        <div className="flex items-center space-x-2 border border-gray-200 rounded-lg p-1 bg-gray-50">
-                          <button
-                            onClick={() => handleQuantityChange(product.id, -1)}
-                            className="w-7 h-7 bg-white text-gray-700 font-bold rounded shadow-sm hover:bg-gray-200 flex items-center justify-center transition"
+                    {/* IMAGE */}
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      onClick={() =>
+                        setSelectedImage(
+                          product.image
+                        )
+                      }
+                      className="
+                        h-20
+                        w-20
+                        flex-shrink-0
+                        cursor-pointer
+                        rounded-lg
+                        object-cover
+                        transition-transform
+                        hover:scale-105
+                      "
+                    />
+
+                    {/* DETAILS */}
+                    <div
+                      className="
+                        min-w-0
+                        flex-1
+                      "
+                    >
+                      <span
+                        style={{
+                          backgroundColor:
+                            '#E58730',
+                          color: '#ffffff',
+                        }}
+                        className="
+                          rounded-full
+                          px-2
+                          py-0.5
+                          text-xs
+                          font-semibold
+                        "
+                      >
+                        {product.jour}
+                      </span>
+
+                      <h3
+                        className="
+                          mt-1
+                          truncate
+                          text-base
+                          font-bold
+                          text-gray-800
+                        "
+                      >
+                        {product.name}
+                      </h3>
+
+                      <p
+                        style={{
+                          color: '#204115',
+                        }}
+                        className="
+                          mt-0.5
+                          text-sm
+                          font-extrabold
+                        "
+                      >
+                        {product.price} DH
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ========================= */}
+                  {/* MODIFIER / MASQUER */}
+                  {/* ========================= */}
+
+                  {isSelected && (
+                    <div
+                      className="
+                        border-t
+                        border-gray-100
+                        bg-gray-50/50
+                      "
+                    >
+
+                      {/* Toggle */}
+                      <button
+                        onClick={() =>
+                          toggleAccordion(
+                            product.id
+                          )
+                        }
+                        style={{
+                          color: '#E58730',
+                        }}
+                        className="
+                          flex
+                          w-full
+                          items-center
+                          justify-between
+                          px-4
+                          py-2.5
+                          text-left
+                          text-xs
+                          font-bold
+                          transition-colors
+                          hover:bg-gray-100
+                        "
+                      >
+                        <span>
+                          {isOpen
+                            ? 'Masquer'
+                            : 'Modifier'}
+                        </span>
+
+                        <span
+                          className="
+                            text-sm
+                          "
+                        >
+                          {isOpen
+                            ? '▲'
+                            : '▼'}
+                        </span>
+                      </button>
+
+                      {/* ACCORDION CONTENT */}
+                      {isOpen && (
+                        <div
+                          className="
+                            space-y-3
+                            border-t
+                            border-gray-100
+                            bg-white
+                            p-4
+                            pt-2
+                          "
+                        >
+
+                          {/* QUANTITÉ */}
+                          <div
+                            className="
+                              flex
+                              items-center
+                              justify-between
+                            "
                           >
-                            -
-                          </button>
-                          <span className="w-8 text-center font-bold text-gray-800 text-sm">
-                            {qty}
-                          </span>
-                          <button
-                            onClick={() => handleQuantityChange(product.id, 1)}
-                            className="w-7 h-7 bg-white text-gray-700 font-bold rounded shadow-sm hover:bg-gray-200 flex items-center justify-center transition"
-                          >
-                            +
-                          </button>
+                            <span
+                              className="
+                                text-xs
+                                font-semibold
+                                text-gray-600
+                              "
+                            >
+                              Quantité:
+                            </span>
+
+                            <div
+                              className="
+                                flex
+                                items-center
+                                space-x-2
+                                rounded-lg
+                                border
+                                border-gray-200
+                                bg-gray-50
+                                p-1
+                              "
+                            >
+                              <button
+                                onClick={() =>
+                                  handleQuantityChange(
+                                    product.id,
+                                    -1
+                                  )
+                                }
+                                className="
+                                  flex
+                                  h-7
+                                  w-7
+                                  items-center
+                                  justify-center
+                                  rounded
+                                  bg-white
+                                  font-bold
+                                  text-gray-700
+                                  shadow-sm
+                                  transition
+                                  hover:bg-gray-200
+                                "
+                              >
+                                -
+                              </button>
+
+                              <span
+                                className="
+                                  w-8
+                                  text-center
+                                  text-sm
+                                  font-bold
+                                  text-gray-800
+                                "
+                              >
+                                {qty}
+                              </span>
+
+                              <button
+                                onClick={() =>
+                                  handleQuantityChange(
+                                    product.id,
+                                    1
+                                  )
+                                }
+                                className="
+                                  flex
+                                  h-7
+                                  w-7
+                                  items-center
+                                  justify-center
+                                  rounded
+                                  bg-white
+                                  font-bold
+                                  text-gray-700
+                                  shadow-sm
+                                  transition
+                                  hover:bg-gray-200
+                                "
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* NOTE */}
+                          <div>
+                            <label
+                              className="
+                                mb-1
+                                block
+                                text-xs
+                                font-semibold
+                                text-gray-600
+                              "
+                            >
+                              Ajouter une note:
+                            </label>
+
+                            <input
+                              type="text"
+                              placeholder="Ex: Sans oignon, bien cuit..."
+                              value={
+                                notes[
+                                  product.id
+                                ] || ''
+                              }
+                              onChange={(e) =>
+                                handleNoteChange(
+                                  product.id,
+                                  e.target.value
+                                )
+                              }
+                              className="
+                                w-full
+                                rounded-lg
+                                border
+                                border-gray-200
+                                p-2
+                                text-xs
+                                outline-none
+                                focus:border-[#E58730]
+                              "
+                            />
+                          </div>
+
                         </div>
-                      </div>
-
-                      {/* Input Notes */}
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">
-                          Ajouter une note:
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Ex: Sans oignon, bien cuit..."
-                          value={notes[product.id] || ''}
-                          onChange={(e) => handleNoteChange(product.id, e.target.value)}
-                          style={{ outlineColor: '#E58730' }}
-                          className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:border-[#E58730]"
-                        />
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Resume & Bouton Commander sur WhatsApp */}
-      <div className="bg-white p-5 rounded-xl shadow-md border border-gray-100 space-y-4">
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between text-gray-600">
-            <span>Sous-total:</span>
-            <span className="font-semibold">{subtotal} DH</span>
-          </div>
-
-          {discount > 0 && (
-            <div 
-              style={{ color: '#649714' }}
-              className="flex justify-between font-bold"
-            >
-              <span>Remise (Semaine Complète):</span>
-              <span>-10 DH</span>
-            </div>
+              );
+            }
           )}
-
-          <div 
-            style={{ color: '#204115' }}
-            className="flex justify-between text-lg font-black border-t pt-2"
-          >
-            <span>Total:</span>
-            <span>{total} DH</span>
-          </div>
         </div>
 
-        <button
-          onClick={handleWhatsAppOrder}
-          style={{ backgroundColor: '#649714' }}
-          className="w-full py-3.5 text-white font-bold rounded-xl shadow-lg hover:bg-[#204115] transition duration-200 flex items-center justify-center space-x-2 text-base"
+        {/* ========================= */}
+        {/* RESUME */}
+        {/* ========================= */}
+
+        <div
+          className="
+            space-y-4
+            rounded-xl
+            border
+            border-gray-100
+            bg-white
+            p-5
+            shadow-md
+          "
         >
-          <span>Demander sur WhatsApp</span>
-        </button>
+          <div
+            className="
+              space-y-2
+              text-sm
+            "
+          >
+
+            {/* Subtotal */}
+            <div
+              className="
+                flex
+                justify-between
+                text-gray-600
+              "
+            >
+              <span>
+                Sous-total:
+              </span>
+
+              <span
+                className="
+                  font-semibold
+                "
+              >
+                {subtotal} DH
+              </span>
+            </div>
+
+            {/* Discount */}
+            {discount > 0 && (
+              <div
+                style={{
+                  color: '#649714',
+                }}
+                className="
+                  flex
+                  justify-between
+                  font-bold
+                "
+              >
+                <span>
+                  Remise (Semaine Complète):
+                </span>
+
+                <span>
+                  -10 DH
+                </span>
+              </div>
+            )}
+
+            {/* Total */}
+            <div
+              style={{
+                color: '#204115',
+              }}
+              className="
+                flex
+                justify-between
+                border-t
+                pt-2
+                text-lg
+                font-black
+              "
+            >
+              <span>
+                Total:
+              </span>
+
+              <span>
+                {total} DH
+              </span>
+            </div>
+          </div>
+
+          {/* WhatsApp */}
+          <button
+            onClick={handleWhatsAppOrder}
+            style={{
+              backgroundColor: '#649714',
+            }}
+            className="
+              flex
+              w-full
+              items-center
+              justify-center
+              space-x-2
+              rounded-xl
+              py-3.5
+              text-base
+              font-bold
+              text-white
+              shadow-lg
+              transition
+              duration-200
+              hover:bg-[#204115]
+            "
+          >
+            <span>
+              Demander sur WhatsApp
+            </span>
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* ========================= */}
+      {/* IMAGE MODAL */}
+      {/* ========================= */}
+
+      {selectedImage && (
+        <div
+          className="
+            fixed
+            inset-0
+            z-50
+            flex
+            items-center
+            justify-center
+            bg-black/80
+            p-4
+          "
+          onClick={() =>
+            setSelectedImage(null)
+          }
+        >
+          <div
+            className="
+              relative
+              max-h-[90vh]
+              max-w-5xl
+            "
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            {/* Grande image */}
+            <img
+              src={selectedImage}
+              alt="Produit"
+              className="
+                max-h-[85vh]
+                max-w-full
+                rounded-xl
+                object-contain
+                shadow-2xl
+              "
+            />
+
+            {/* Close */}
+            <button
+              onClick={() =>
+                setSelectedImage(null)
+              }
+              className="
+                absolute
+                right-2
+                top-2
+                flex
+                h-10
+                w-10
+                items-center
+                justify-center
+                rounded-full
+                bg-[#204115]
+                text-2xl
+                font-bold
+                text-white
+                transition
+                hover:bg-[#E58730]
+              "
+              aria-label="Fermer"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

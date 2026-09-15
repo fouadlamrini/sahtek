@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import slide from "../data/silde";
 
@@ -5,157 +6,119 @@ function Slide() {
   const sliderRef = useRef(null);
   const animationRef = useRef(null);
 
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(false);
 
-  // المسافة بين الصور
   const GAP = 16;
-
-  // سرعة الحركة
+  const IMAGE_WIDTH = 220;
   const SPEED = 0.7;
 
+  // Détecter PC / mobile
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(
+      "(hover: hover) and (pointer: fine)"
+    );
+
+    const updateDevice = () => {
+      setIsDesktop(mediaQuery.matches);
+    };
+
+    updateDevice();
+
+    mediaQuery.addEventListener("change", updateDevice);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateDevice);
+    };
+  }, []);
+
+  // Animation automatique
   useEffect(() => {
     const slider = sliderRef.current;
 
     if (!slider) return;
 
     const moveSlider = () => {
-      if (!isPaused) {
+      if (isPlaying) {
         slider.scrollLeft += SPEED;
 
-        /*
-          عدد الصور = 36
+        const oneSetWidth = slide.length * (IMAGE_WIDTH + GAP);
 
-          كل image عندها:
-          width = 220px
-          gap = 16px
-
-          إذن المجموعة كاملة:
-          36 × (220 + 16)
-        */
-
-        const oneSetWidth =
-          slide.length * (220 + GAP);
-
-        /*
-          ملي ندوزو المجموعة الأولى كاملة،
-          نرجعو نفس المسافة للبداية.
-
-          المستخدم ما غاديش يحس بالـ jump
-          حيث المجموعة الثانية مطابقة للأولى.
-        */
         if (slider.scrollLeft >= oneSetWidth) {
           slider.scrollLeft -= oneSetWidth;
         }
       }
 
-      animationRef.current =
-        requestAnimationFrame(moveSlider);
+      animationRef.current = requestAnimationFrame(moveSlider);
     };
 
-    animationRef.current =
-      requestAnimationFrame(moveSlider);
+    animationRef.current = requestAnimationFrame(moveSlider);
 
     return () => {
       cancelAnimationFrame(animationRef.current);
     };
-  }, [isPaused]);
+  }, [isPlaying]);
+
+  // PC : pause au hover
+  const handleMouseEnter = () => {
+    if (isDesktop) {
+      setIsPlaying(false);
+    }
+  };
+
+  // PC : reprendre quand on quitte
+  const handleMouseLeave = () => {
+    if (isDesktop) {
+      setIsPlaying(true);
+    }
+  };
+
+  // Mobile : click pour pause/reprendre
+  const handleClick = () => {
+    if (!isDesktop) {
+      setIsPlaying((prev) => !prev);
+    }
+  };
 
   return (
     <section className="w-full py-12">
 
-      {/* Title */}
-      <h2
-        className="
-          mb-8
-          text-center
-          text-2xl
-          font-bold
-          text-[#204115]
-          sm:text-3xl
-        "
-      >
-        Les commandes de nos clients
-      </h2>
+      {/* Titre avec cadre */}
+      <div className="mb-8 flex justify-center px-4">
+        <h2
+          className="
+            rounded-xl
+            border-2 border-[#649714]
+            bg-white
+            px-6 py-3
+            text-center
+            text-2xl font-bold
+            text-[#204115]
+            shadow-md
+            sm:px-8 sm:py-4
+            sm:text-3xl
+          "
+        >
+          Les commandes de nos clients
+        </h2>
+      </div>
 
-      {/* Film strip container */}
+      {/* Slider */}
       <div className="relative w-full">
-
-        {/* Top film holes */}
-        <div
-          className="
-            pointer-events-none
-            absolute
-            left-0
-            top-2
-            z-10
-            flex
-            w-full
-            justify-around
-            overflow-hidden
-            px-2
-          "
-        >
-          {[...Array(20)].map((_, index) => (
-            <span
-              key={index}
-              className="
-                h-3
-                w-6
-                shrink-0
-                rounded-sm
-                bg-white
-              "
-            />
-          ))}
-        </div>
-
-        {/* Bottom film holes */}
-        <div
-          className="
-            pointer-events-none
-            absolute
-            bottom-2
-            left-0
-            z-10
-            flex
-            w-full
-            justify-around
-            overflow-hidden
-            px-2
-          "
-        >
-          {[...Array(20)].map((_, index) => (
-            <span
-              key={index}
-              className="
-                h-3
-                w-6
-                shrink-0
-                rounded-sm
-                bg-white
-              "
-            />
-          ))}
-        </div>
-
-        {/* Slider */}
         <div
           ref={sliderRef}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
           className="
-            flex
-            w-full
+            flex w-full
             gap-4
             overflow-hidden
             bg-[#204115]
-            px-4
-            py-8
+            px-4 py-8
             select-none
           "
         >
-
-          {/* First set + duplicated set */}
           {[...slide, ...slide].map((image, index) => (
             <div
               key={index}
@@ -176,9 +139,7 @@ function Slide() {
             >
               <img
                 src={image}
-                alt={`Commande client ${
-                  (index % slide.length) + 1
-                }`}
+                alt={`Commande client ${(index % slide.length) + 1}`}
                 draggable="false"
                 className="
                   h-[280px]
@@ -188,7 +149,6 @@ function Slide() {
               />
             </div>
           ))}
-
         </div>
       </div>
     </section>
