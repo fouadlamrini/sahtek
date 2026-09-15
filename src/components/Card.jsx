@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Maximize2 } from 'lucide-react';
 import dataProduct from '../data/data';
 
 const Card = () => {
@@ -52,7 +53,7 @@ const Card = () => {
         id,
       ]);
 
-      // Cacher message d'erreur
+      // Cacher le message d'erreur
       setErrorMessage('');
 
       setOpenAccordions((prev) => ({
@@ -79,7 +80,7 @@ const Card = () => {
 
       setSelectedIds(allIds);
 
-      // Cacher message d'erreur
+      // Cacher le message d'erreur
       setErrorMessage('');
 
       setOpenAccordions({});
@@ -137,25 +138,24 @@ const Card = () => {
   // 6. TOTAL
   // =========================
 
-  const subtotal =
-    dataProduct.reduce(
-      (sum, product) => {
-        if (
-          selectedIds.includes(product.id)
-        ) {
-          const qty =
-            quantities[product.id] || 1;
+  const subtotal = dataProduct.reduce(
+    (sum, product) => {
+      if (
+        selectedIds.includes(product.id)
+      ) {
+        const qty =
+          quantities[product.id] || 1;
 
-          return (
-            sum +
-            product.price * qty
-          );
-        }
+        return (
+          sum +
+          product.price * qty
+        );
+      }
 
-        return sum;
-      },
-      0
-    );
+      return sum;
+    },
+    0
+  );
 
   // Remise si tous les produits sont sélectionnés
   const isAllSelected =
@@ -179,13 +179,13 @@ const Card = () => {
     // Aucun produit sélectionné
     if (selectedIds.length === 0) {
       setErrorMessage(
-        "⚠️ Veuillez sélectionner au moins un plat avant de continuer."
+        '⚠️ Veuillez sélectionner au moins un plat avant de continuer.'
       );
 
       return;
     }
 
-    // Supprimer l'erreur
+    // Supprimer le message d'erreur
     setErrorMessage('');
 
     let message =
@@ -220,7 +220,7 @@ const Card = () => {
 
     // Numéro WhatsApp
     const rawPhoneNumber =
-      "+212 656-536985";
+      '+212 656-536985';
 
     const phoneNumber =
       rawPhoneNumber.replace(
@@ -424,7 +424,7 @@ const Card = () => {
                     "
                   >
 
-                    {/* Checkbox */}
+                    {/* CHECKBOX */}
 
                     <input
                       type="checkbox"
@@ -447,29 +447,90 @@ const Card = () => {
                       "
                     />
 
+                    {/* ========================= */}
                     {/* IMAGE */}
+                    {/* ========================= */}
 
-                    <img
-                      src={product.image}
-                      alt={product.name}
+                    <div
                       onClick={() =>
                         setSelectedImage(
                           product.image
                         )
                       }
                       className="
+                        group
+                        relative
                         h-20
                         w-20
                         flex-shrink-0
                         cursor-pointer
+                        overflow-hidden
                         rounded-lg
-                        object-cover
-                        transition-transform
-                        hover:scale-105
                       "
-                    />
+                    >
 
+                      {/* Image */}
+
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="
+                          h-full
+                          w-full
+                          object-cover
+                          transition-transform
+                          duration-300
+                          group-hover:scale-105
+                        "
+                      />
+
+                      {/* Hover Overlay */}
+
+                      <div
+                        className="
+                          absolute
+                          inset-0
+                          bg-black/10
+                          opacity-0
+                          transition-opacity
+                          duration-200
+                          group-hover:opacity-100
+                        "
+                      />
+
+                      {/* ========================= */}
+                      {/* EXPAND ICON */}
+                      {/* ========================= */}
+
+                      <div
+                        className="
+                          absolute
+                          bottom-1
+                          right-1
+                          flex
+                          h-7
+                          w-7
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-black/60
+                          text-white
+                          opacity-0
+                          shadow-md
+                          backdrop-blur-sm
+                          transition-all
+                          duration-200
+                          group-hover:opacity-100
+                        "
+                      >
+                        <Maximize2 className="h-4 w-4" />
+                      </div>
+
+                    </div>
+
+                    {/* ========================= */}
                     {/* DETAILS */}
+                    {/* ========================= */}
 
                     <div
                       className="
@@ -477,6 +538,7 @@ const Card = () => {
                         flex-1
                       "
                     >
+
                       <span
                         style={{
                           backgroundColor:
@@ -518,7 +580,9 @@ const Card = () => {
                       >
                         {product.price} DH
                       </p>
+
                     </div>
+
                   </div>
 
                   {/* ========================= */}
@@ -577,7 +641,9 @@ const Card = () => {
                         </span>
                       </button>
 
+                      {/* ========================= */}
                       {/* ACCORDION CONTENT */}
+                      {/* ========================= */}
 
                       {isOpen && (
                         <div
@@ -696,7 +762,9 @@ const Card = () => {
                             </div>
                           </div>
 
+                          {/* ========================= */}
                           {/* NOTE */}
+                          {/* ========================= */}
 
                           <div>
                             <label
@@ -740,8 +808,10 @@ const Card = () => {
 
                         </div>
                       )}
+
                     </div>
                   )}
+
                 </div>
               );
             }
@@ -771,7 +841,7 @@ const Card = () => {
             "
           >
 
-            {/* Subtotal */}
+            {/* SUBTOTAL */}
 
             <div
               className="
@@ -793,7 +863,7 @@ const Card = () => {
               </span>
             </div>
 
-            {/* Discount */}
+            {/* DISCOUNT */}
 
             {discount > 0 && (
               <div
@@ -816,7 +886,7 @@ const Card = () => {
               </div>
             )}
 
-            {/* Total */}
+            {/* TOTAL */}
 
             <div
               style={{
@@ -839,6 +909,7 @@ const Card = () => {
                 {total} DH
               </span>
             </div>
+
           </div>
 
           {/* ========================= */}
@@ -848,9 +919,6 @@ const Card = () => {
           {errorMessage && (
             <div
               className="
-                flex
-                items-center
-                gap-2
                 rounded-lg
                 border
                 border-red-200
@@ -862,9 +930,7 @@ const Card = () => {
                 text-red-600
               "
             >
-              <span>
-                {errorMessage}
-              </span>
+              {errorMessage}
             </div>
           )}
 
@@ -923,6 +989,7 @@ const Card = () => {
             setSelectedImage(null)
           }
         >
+
           <div
             className="
               relative
@@ -934,7 +1001,7 @@ const Card = () => {
             }
           >
 
-            {/* Grande image */}
+            {/* GRANDE IMAGE */}
 
             <img
               src={selectedImage}
@@ -948,7 +1015,7 @@ const Card = () => {
               "
             />
 
-            {/* Close */}
+            {/* CLOSE */}
 
             <button
               onClick={() =>
