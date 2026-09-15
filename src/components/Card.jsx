@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import dataProduct from '../data/data';
 
@@ -30,6 +29,9 @@ const Card = () => {
   // Image sélectionnée pour le modal
   const [selectedImage, setSelectedImage] = useState(null);
 
+  // Message d'erreur
+  const [errorMessage, setErrorMessage] = useState('');
+
   // =========================
   // 1. SELECT / DESELECT PRODUCT
   // =========================
@@ -49,6 +51,9 @@ const Card = () => {
         ...selectedIds,
         id,
       ]);
+
+      // Cacher message d'erreur
+      setErrorMessage('');
 
       setOpenAccordions((prev) => ({
         ...prev,
@@ -73,6 +78,10 @@ const Card = () => {
       );
 
       setSelectedIds(allIds);
+
+      // Cacher message d'erreur
+      setErrorMessage('');
+
       setOpenAccordions({});
     }
   };
@@ -132,9 +141,7 @@ const Card = () => {
     dataProduct.reduce(
       (sum, product) => {
         if (
-          selectedIds.includes(
-            product.id
-          )
+          selectedIds.includes(product.id)
         ) {
           const qty =
             quantities[product.id] || 1;
@@ -169,12 +176,17 @@ const Card = () => {
   // =========================
 
   const handleWhatsAppOrder = () => {
+    // Aucun produit sélectionné
     if (selectedIds.length === 0) {
-      alert(
-        "Afack khtar 3la l-aqal plat wahad!"
+      setErrorMessage(
+        "⚠️ Veuillez sélectionner au moins un plat avant de continuer."
       );
+
       return;
     }
+
+    // Supprimer l'erreur
+    setErrorMessage('');
 
     let message =
       `*Salam, bghit n-commander had les plats:*\n\n`;
@@ -413,6 +425,7 @@ const Card = () => {
                   >
 
                     {/* Checkbox */}
+
                     <input
                       type="checkbox"
                       checked={isSelected}
@@ -435,6 +448,7 @@ const Card = () => {
                     />
 
                     {/* IMAGE */}
+
                     <img
                       src={product.image}
                       alt={product.name}
@@ -456,6 +470,7 @@ const Card = () => {
                     />
 
                     {/* DETAILS */}
+
                     <div
                       className="
                         min-w-0
@@ -520,6 +535,7 @@ const Card = () => {
                     >
 
                       {/* Toggle */}
+
                       <button
                         onClick={() =>
                           toggleAccordion(
@@ -532,6 +548,7 @@ const Card = () => {
                         className="
                           flex
                           w-full
+                          cursor-pointer
                           items-center
                           justify-between
                           px-4
@@ -561,6 +578,7 @@ const Card = () => {
                       </button>
 
                       {/* ACCORDION CONTENT */}
+
                       {isOpen && (
                         <div
                           className="
@@ -574,6 +592,7 @@ const Card = () => {
                         >
 
                           {/* QUANTITÉ */}
+
                           <div
                             className="
                               flex
@@ -603,6 +622,9 @@ const Card = () => {
                                 p-1
                               "
                             >
+
+                              {/* MINUS */}
+
                               <button
                                 onClick={() =>
                                   handleQuantityChange(
@@ -614,6 +636,7 @@ const Card = () => {
                                   flex
                                   h-7
                                   w-7
+                                  cursor-pointer
                                   items-center
                                   justify-center
                                   rounded
@@ -628,6 +651,8 @@ const Card = () => {
                                 -
                               </button>
 
+                              {/* QUANTITY */}
+
                               <span
                                 className="
                                   w-8
@@ -640,6 +665,8 @@ const Card = () => {
                                 {qty}
                               </span>
 
+                              {/* PLUS */}
+
                               <button
                                 onClick={() =>
                                   handleQuantityChange(
@@ -651,6 +678,7 @@ const Card = () => {
                                   flex
                                   h-7
                                   w-7
+                                  cursor-pointer
                                   items-center
                                   justify-center
                                   rounded
@@ -664,10 +692,12 @@ const Card = () => {
                               >
                                 +
                               </button>
+
                             </div>
                           </div>
 
                           {/* NOTE */}
+
                           <div>
                             <label
                               className="
@@ -733,6 +763,7 @@ const Card = () => {
             shadow-md
           "
         >
+
           <div
             className="
               space-y-2
@@ -741,6 +772,7 @@ const Card = () => {
           >
 
             {/* Subtotal */}
+
             <div
               className="
                 flex
@@ -762,6 +794,7 @@ const Card = () => {
             </div>
 
             {/* Discount */}
+
             {discount > 0 && (
               <div
                 style={{
@@ -784,6 +817,7 @@ const Card = () => {
             )}
 
             {/* Total */}
+
             <div
               style={{
                 color: '#204115',
@@ -807,7 +841,37 @@ const Card = () => {
             </div>
           </div>
 
-          {/* WhatsApp */}
+          {/* ========================= */}
+          {/* ERROR MESSAGE */}
+          {/* ========================= */}
+
+          {errorMessage && (
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                rounded-lg
+                border
+                border-red-200
+                bg-red-50
+                px-4
+                py-3
+                text-sm
+                font-semibold
+                text-red-600
+              "
+            >
+              <span>
+                {errorMessage}
+              </span>
+            </div>
+          )}
+
+          {/* ========================= */}
+          {/* WHATSAPP */}
+          {/* ========================= */}
+
           <button
             onClick={handleWhatsAppOrder}
             style={{
@@ -816,6 +880,7 @@ const Card = () => {
             className="
               flex
               w-full
+              cursor-pointer
               items-center
               justify-center
               space-x-2
@@ -834,6 +899,7 @@ const Card = () => {
               Demander sur WhatsApp
             </span>
           </button>
+
         </div>
       </div>
 
@@ -867,7 +933,9 @@ const Card = () => {
               e.stopPropagation()
             }
           >
+
             {/* Grande image */}
+
             <img
               src={selectedImage}
               alt="Produit"
@@ -881,6 +949,7 @@ const Card = () => {
             />
 
             {/* Close */}
+
             <button
               onClick={() =>
                 setSelectedImage(null)
@@ -892,6 +961,7 @@ const Card = () => {
                 flex
                 h-10
                 w-10
+                cursor-pointer
                 items-center
                 justify-center
                 rounded-full
@@ -906,6 +976,7 @@ const Card = () => {
             >
               ×
             </button>
+
           </div>
         </div>
       )}
